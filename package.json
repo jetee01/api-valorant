@@ -1,0 +1,13 @@
+{
+  "name": "api-valorant-rank",
+  "version": "1.0.0",
+  "private": true,
+  "description": "API simples para consultar o elo do VALORANT por Riot ID, pronta para comandos da Twitch.",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
