@@ -1,71 +1,57 @@
-# API de elo do VALORANT para Twitch
+# API de elo do VALORANT para Twitch — Cloudflare Workers
 
-API em Node.js que consulta o elo de uma conta pelo Riot ID (`nick#tag`), usando o serviço HenrikDev. O endpoint de texto foi pensado para serviços de comando/custom API da Twitch.
+Worker que consulta o elo pelo Riot ID (`nick#tag`) usando o serviço HenrikDev. A rota de texto é indicada para custom API/comandos da Twitch.
 
-## Requisitos
+## Publicar no Cloudflare
 
-- Node.js 18 ou superior
-- Uma chave de API do HenrikDev
+1. Instale o Node.js (18 ou superior) e faça clone deste repositório.
+2. Na pasta do projeto, instale as dependências:
 
-## Executar
+   ```bash
+   npm install
+   ```
+
+3. Configure a chave da HenrikDev como secret (o comando pedirá o valor sem gravá-lo no código):
+
+   ```bash
+   npx wrangler login
+   npx wrangler secret put HENRIK_API_KEY
+   ```
+
+4. Publique o Worker:
+
+   ```bash
+   npm run deploy
+   ```
+
+O Wrangler mostrará o endereço publicado, normalmente `https://api-valorant-rank.<sua-conta>.workers.dev`.
+
+Para testar localmente, configure o secret de desenvolvimento e rode `npm run dev`:
 
 ```bash
-npm start
-```
-
-Configure a chave no ambiente do servidor (não coloque a chave no código nem na URL pública):
-
-```bash
-HENRIK_API_KEY=sua_chave PORT=3000 npm start
-```
-
-No Windows PowerShell:
-
-```powershell
-$env:HENRIK_API_KEY="sua_chave"
-$env:PORT="3000"
-npm start
+npx wrangler secret put HENRIK_API_KEY --local
+npm run dev
 ```
 
 ## Usar
 
-Passe o nick e a tag como parâmetros separados. A região padrão é `br`.
+A região padrão é `br`. Você pode informar o Riot ID de duas formas:
 
-- Texto simples, ideal para custom API/comando: `GET /api/rank/text?name=Jogador&tag=BR1`
-- JSON: `GET /api/rank?name=Jogador&tag=BR1`
-- Outras regiões: acrescente `&region=na` (regiões aceitas: `br`, `na`, `latam`, `eu`, `ap`, `kr`).
-- Verificação de saúde: `GET /health`
+- Separado: `GET /api/rank/text?name=Jogador&tag=BR1`
+- Junto: `GET /api/rank/text?riotid=Jogador%23BR1`
 
-Exemplo de resposta de texto:
+Outros exemplos:
 
-```text
-Jogador#BR1: Diamante 2 • 57 RR
-```
+- Texto simples: `/api/rank/text?name=Jogador&tag=BR1&region=br`
+- JSON: `/api/rank?name=Jogador&tag=BR1`
+- Saúde: `/health`
 
-Exemplo JSON:
+Regiões aceitas: `br`, `na`, `latam`, `eu`, `ap` e `kr`.
 
-```json
-{
-  "name": "Jogador",
-  "tag": "BR1",
-  "region": "br",
-  "rank": "Diamante 2",
-  "rr": 57,
-  "elo": 1820,
-  "message": "Jogador#BR1: Diamante 2 • 57 RR"
-}
-```
+A resposta de texto tem o formato `Jogador#BR1: Diamante 2 • 57 RR`. Use a URL pública `/api/rank/text?...` no campo de custom API do seu bot. A sintaxe para interpolar o nick ou o Riot ID depende do bot; se ele fornecer o Riot ID como uma variável única, use o parâmetro `riotid` e codifique `#` como `%23`. Se fornecer nick e tag separadamente, use `name` e `tag`.
 
-Use a URL pública `/api/rank/text?...` no campo de custom API do seu bot. A sintaxe exata da variável para inserir nick/tag depende do bot da Twitch; informe o Riot ID como dois parâmetros (`name` e `tag`). Exemplo de URL para testar:
+## Segurança e funcionamento
 
-```text
-https://SEU-DOMINIO/api/rank/text?name=Jogador&tag=BR1&region=br
-```
-
-O endpoint JSON também pode ser usado por bots que permitem selecionar um campo da resposta, como `message` ou `rank`.
-
-## Observações
-
-- A chave HenrikDev fica apenas no servidor e é enviada ao provedor pelo cabeçalho `X-API-Key`.
-- As respostas são armazenadas em cache por 60 segundos para reduzir chamadas ao provedor.
-- Hospede a API em um serviço com HTTPS e configure limites de requisição no provedor de hospedagem, pois o endpoint é público.
+- A chave HenrikDev fica guardada como secret no Cloudflare e nunca deve ser colocada na URL do comando.
+- O cache do Cloudflare mantém respostas por 60 segundos para reduzir chamadas ao serviço externo.
+- O endpoint é público. Para evitar abuso, configure regras de rate limiting no Cloudflare.

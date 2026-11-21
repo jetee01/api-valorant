@@ -1,13 +1,13 @@
 {
   "name": "api-valorant-rank",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
-  "description": "API simples para consultar o elo do VALORANT por Riot ID, pronta para comandos da Twitch.",
-  "main": "src/server.js",
+  "description": "API de elo do VALORANT por Riot ID, pronta para Cloudflare Workers e comandos da Twitch.",
   "scripts": {
-    "start": "node src/server.js"
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
   },
-  "engines": {
-    "node": ">=18"
+  "devDependencies": {
+    "wrangler": "^4.0.0"
   }
 }
